@@ -22,13 +22,21 @@ class Genres(models.Model):
         verbose_name_plural = 'Genres'
 
 
-class GenresMovies(models.Model):
-    genre_id = models.IntegerField()
-    movie_id = models.IntegerField()
+class People(models.Model):
+    name = models.CharField(max_length=99999, blank=True, null=True)
+    description = models.CharField(max_length=99999, blank=True, null=True)
+    wikipedia_id = models.IntegerField(blank=True, null=True)
+    freebase = models.CharField(max_length=99999, blank=True, null=True)
+    themoviedb = models.IntegerField(blank=True, null=True)
+    tvrage = models.IntegerField(blank=True, null=True)
+    created_at = models.DateTimeField()
+    updated_at = models.DateTimeField()
 
     class Meta:
         managed = False
-        db_table = 'genres_movies'
+        db_table = 'people'
+        verbose_name = 'Person'
+        verbose_name_plural = 'People'
 
 
 class Movies(models.Model):
@@ -54,38 +62,35 @@ class Movies(models.Model):
     poster_240x342 = models.CharField(max_length=99999, blank=True, null=True)
     poster_400x570 = models.CharField(max_length=99999, blank=True, null=True)
 
+    genres = models.ManyToManyField(Genres, related_name='movies', through='GenresMovies')
+    people = models.ManyToManyField(People, related_name='movies', through='MoviesPeople')
+
     class Meta:
         managed = False
         db_table = 'movies'
         verbose_name = 'Movie'
         verbose_name_plural = 'Movies'
 
+# Join Tables
+# NOTE the foreign keys did not get set automatically by inspectdb!
+
+class GenresMovies(models.Model):
+    genre = models.ForeignKey(Genres, primary_key=True)
+    movie = models.ForeignKey(Movies, primary_key=True)
+
+    class Meta:
+        managed = False
+        db_table = 'genres_movies'
+
 
 class MoviesPeople(models.Model):
-    person_id = models.IntegerField()
-    movie_id = models.IntegerField()
+    # eek. django automatically appends _id
+    person = models.ForeignKey(People, primary_key=True)
+    movie = models.ForeignKey(Movies, primary_key=True)
 
     class Meta:
         managed = False
         db_table = 'movies_people'
-
-
-class People(models.Model):
-    name = models.CharField(max_length=99999, blank=True, null=True)
-    description = models.CharField(max_length=99999, blank=True, null=True)
-    wikipedia_id = models.IntegerField(blank=True, null=True)
-    freebase = models.CharField(max_length=99999, blank=True, null=True)
-    themoviedb = models.IntegerField(blank=True, null=True)
-    tvrage = models.IntegerField(blank=True, null=True)
-    created_at = models.DateTimeField()
-    updated_at = models.DateTimeField()
-
-    class Meta:
-        managed = False
-        db_table = 'people'
-        verbose_name = 'Person'
-        verbose_name_plural = 'People'
-
 
 
 class Users(models.Model):
