@@ -29,5 +29,5 @@ class GenresMoviesInline(admin.TabularInline):
 
 @admin.register(models.Movies)
 class MoviesAdmin(admin.ModelAdmin):
-    list_display = ('title', 'published_at', 'rating')
+    list_display = ('title', 'rating')
     # inlines = (GenresMoviesInline, PeopleMoviesInline)

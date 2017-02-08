@@ -41,7 +41,6 @@ class People(models.Model):
 
 class Movies(models.Model):
     title = models.CharField(max_length=99999, blank=True, null=True)
-    published_at = models.DateTimeField(blank=True, null=True)
     created_at = models.DateTimeField()
     updated_at = models.DateTimeField()
     release_year = models.IntegerField(blank=True, null=True)
