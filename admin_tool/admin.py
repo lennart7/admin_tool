@@ -16,6 +16,9 @@ class PeopleAdmin(admin.ModelAdmin):
 class PeopleMoviesInline(admin.TabularInline):
     model = models.MoviesPeople
     extra = 1
+    readonly_fields = ['person_name']
+    def person_name(self, instance):
+        return instance.person.name
 
 
 class GenresMoviesInline(admin.TabularInline):
@@ -25,9 +28,13 @@ class GenresMoviesInline(admin.TabularInline):
     # extra carried attributes
     model = models.GenresMovies
     extra = 1
+    readonly_fields = ['genre_name']
+    def genre_name(self, instance):
+        return instance.genre.genre
 
 
 @admin.register(models.Movies)
 class MoviesAdmin(admin.ModelAdmin):
     list_display = ('title', 'rating')
-    # inlines = (GenresMoviesInline, PeopleMoviesInline)
+    inlines = (GenresMoviesInline, PeopleMoviesInline)
+    filter_vertical = ('genres', 'people')

@@ -80,6 +80,8 @@ class GenresMovies(models.Model):
     class Meta:
         managed = False
         db_table = 'genres_movies'
+        verbose_name = 'Genres Movie'
+        verbose_name_plural = 'Genres Movies'
 
 
 class MoviesPeople(models.Model):
@@ -90,6 +92,8 @@ class MoviesPeople(models.Model):
     class Meta:
         managed = False
         db_table = 'movies_people'
+        verbose_name = 'Movie Person'
+        verbose_name_plural = 'Movie People'
 
 
 class Users(models.Model):
