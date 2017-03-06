@@ -39,6 +39,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'admin_tool',
+    'autocomplete-light'
 ]
 
 MIDDLEWARE = [
@@ -71,19 +72,6 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'mysite.wsgi.application'
 
-
-# Database
-# https://docs.djangoproject.com/en/1.10/ref/settings/#databases
-
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'vinge_dev',
-    }
-}
-
-# config production db
-DATABASES['default'] = dj_database_url.config()
 
 
 # Password validation

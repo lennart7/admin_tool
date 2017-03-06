@@ -1,107 +1,120 @@
-# This is an auto-generated Django model module.
-# You'll have to do the following manually to clean this up:
-#   * Rearrange models' order
-#   * Make sure each model has one field with primary_key=True
-#   * Make sure each ForeignKey has `on_delete` set to the desired behavior.
-#   * Remove `managed = False` lines if you wish to allow Django to create, modify, and delete the table
-# Feel free to rename the models, but don't rename db_table values or field names.
 from __future__ import unicode_literals
+from django.utils import timezone
 
 from django.db import models
 
 
-class Genres(models.Model):
-    genre = models.CharField(max_length=99999, blank=True, null=True)
-    created_at = models.DateTimeField()
+class ContentList(models.Model):
+    curated = models.NullBooleanField()
+    name = models.CharField(max_length=255, blank=True, null=True)
+    type = models.CharField(max_length=255, blank=True, null=True)
+    # have django update these on modify / add
+    created_at = models.DateTimeField(editable=False)
     updated_at = models.DateTimeField()
+
+    movies = models.ManyToManyField('Movie', related_name='content_lists', through='ContentListMovie')
+    shows = models.ManyToManyField('Show', related_name='content_lists', through='ContentListShow')
+    episodes= models.ManyToManyField('Episode', related_name='content_lists', through='ContentListEpisode')
+
+    def save(self, *args, **kwargs):
+        """On save, update timestamps."""
+        if not self.id:
+            self.created_at = timezone.now()
+        self.modified = timezone.now()
+        return super(ContentList, self).save(*args, **kwargs)
+
+    class Meta:
+        verbose_name = 'Content List'
+        verbose_name_plural = 'Content Lists'
+        managed = False
+        db_table = 'content_lists'
+
+
+class ContentListEpisode(models.Model):
+    content_list = models.ForeignKey(ContentList, primary_key=True)
+    episode = models.ForeignKey('Episode', primary_key=True)
 
     class Meta:
         managed = False
-        db_table = 'genres'
-        verbose_name = 'Genre'
-        verbose_name_plural = 'Genres'
+        db_table = 'content_lists_episodes'
 
 
-class People(models.Model):
-    name = models.CharField(max_length=99999, blank=True, null=True)
-    description = models.CharField(max_length=99999, blank=True, null=True)
-    wikipedia_id = models.IntegerField(blank=True, null=True)
-    freebase = models.CharField(max_length=99999, blank=True, null=True)
-    themoviedb = models.IntegerField(blank=True, null=True)
-    tvrage = models.IntegerField(blank=True, null=True)
-    created_at = models.DateTimeField()
-    updated_at = models.DateTimeField()
+class ContentListMovie(models.Model):
+    content_list = models.ForeignKey(ContentList, primary_key=True)
+    movie = models.ForeignKey('Movie', primary_key=True)
 
     class Meta:
         managed = False
-        db_table = 'people'
-        verbose_name = 'Person'
-        verbose_name_plural = 'People'
+        db_table = 'content_lists_movies'
 
 
-class Movies(models.Model):
-    title = models.CharField(max_length=99999, blank=True, null=True)
-    created_at = models.DateTimeField()
-    updated_at = models.DateTimeField()
-    release_year = models.IntegerField(blank=True, null=True)
-    themoviedb = models.IntegerField(blank=True, null=True)
-    original_title = models.CharField(max_length=99999, blank=True, null=True)
-    alternative_titles = models.CharField(max_length=99999, blank=True, null=True)
-    imdb = models.CharField(max_length=99999, blank=True, null=True)
-    pre_order = models.NullBooleanField()
-    in_theaters = models.NullBooleanField()
+class ContentListShow(models.Model):
+    content_list = models.ForeignKey(ContentList, primary_key=True)
+    show = models.ForeignKey('Show', primary_key=True)
+
+    class Meta:
+        managed = False
+        db_table = 'content_lists_shows'
+
+
+class Episode(models.Model):
+    title = models.CharField(max_length=255, blank=True, null=True)
+    season_number = models.IntegerField(blank=True, null=True)
+    episode_number = models.IntegerField(blank=True, null=True)
+    media_content = models.ForeignKey('MediaContents', models.DO_NOTHING, blank=True, null=True)
+    show = models.ForeignKey('Show', models.DO_NOTHING, blank=True, null=True)
+
+    class Meta:
+        managed = False
+        db_table = 'episodes'
+
+
+class MediaContents(models.Model):
+    original_title = models.CharField(max_length=255, blank=True, null=True)
+    alternative_titles = models.TextField(blank=True, null=True)  # This field type is a guess.
+    overview = models.CharField(max_length=255, blank=True, null=True)
     release_date = models.DateTimeField(blank=True, null=True)
-    rating = models.CharField(max_length=99999, blank=True, null=True)
-    rottomtomatoes = models.IntegerField(blank=True, null=True)
-    freebase = models.CharField(max_length=99999, blank=True, null=True)
-    wikipedia_id = models.IntegerField(blank=True, null=True)
-    metacritic = models.CharField(max_length=99999, blank=True, null=True)
-    common_sense_media = models.CharField(max_length=99999, blank=True, null=True)
-    poster_120x171 = models.CharField(max_length=99999, blank=True, null=True)
-    poster_240x342 = models.CharField(max_length=99999, blank=True, null=True)
-    poster_400x570 = models.CharField(max_length=99999, blank=True, null=True)
+    guidebox_id = models.CharField(max_length=255, blank=True, null=True)
+    duration = models.IntegerField(blank=True, null=True)
+    imdb_id = models.CharField(max_length=255, blank=True, null=True)
+    rottentomatoes = models.CharField(max_length=255, blank=True, null=True)
+    maturity_rating = models.CharField(max_length=255, blank=True, null=True)
+    wikipedia_id = models.CharField(max_length=255, blank=True, null=True)
+    created_at = models.DateTimeField()
+    updated_at = models.DateTimeField()
 
-    genres = models.ManyToManyField(Genres, related_name='movies', through='GenresMovies')
-    people = models.ManyToManyField(People, related_name='movies', through='MoviesPeople')
+    class Meta:
+        managed = False
+        db_table = 'media_contents'
+
+
+class Movie(models.Model):
+    title = models.CharField(max_length=255, blank=True, null=True)
+    in_theaters = models.NullBooleanField()
+    media_content = models.ForeignKey(MediaContents, models.DO_NOTHING, blank=True, null=True)
 
     class Meta:
         managed = False
         db_table = 'movies'
-        verbose_name = 'Movie'
-        verbose_name_plural = 'Movies'
 
-# Join Tables
-# NOTE the foreign keys did not get set automatically by inspectdb!
 
-class GenresMovies(models.Model):
-    genre = models.ForeignKey(Genres, primary_key=True)
-    movie = models.ForeignKey(Movies, primary_key=True)
+class Show(models.Model):
+    title = models.CharField(max_length=255, blank=True, null=True)
+    air_day_of_week = models.CharField(max_length=255, blank=True, null=True)
+    air_time = models.CharField(max_length=255, blank=True, null=True)
+    media_content = models.ForeignKey(MediaContents, models.DO_NOTHING, blank=True, null=True)
 
     class Meta:
         managed = False
-        db_table = 'genres_movies'
-        verbose_name = 'Genres Movie'
-        verbose_name_plural = 'Genres Movies'
+        db_table = 'shows'
 
 
-class MoviesPeople(models.Model):
-    # eek. django automatically appends _id
-    person = models.ForeignKey(People, primary_key=True)
-    movie = models.ForeignKey(Movies, primary_key=True)
-
-    class Meta:
-        managed = False
-        db_table = 'movies_people'
-        verbose_name = 'Movie Person'
-        verbose_name_plural = 'Movie People'
-
-
-class Users(models.Model):
-    name = models.CharField(max_length=99999, blank=True, null=True)
-    email = models.CharField(max_length=99999, blank=True, null=True)
+class User(models.Model):
+    email = models.CharField(max_length=255, blank=True, null=True)
+    name = models.CharField(max_length=255, blank=True, null=True)
+    phone_number = models.CharField(max_length=255, blank=True, null=True)
     created_at = models.DateTimeField()
     updated_at = models.DateTimeField()
-    api_key = models.CharField(max_length=99999, blank=True, null=True)
 
     class Meta:
         managed = False
