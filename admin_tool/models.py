@@ -7,7 +7,7 @@ from django.db import models
 class ContentList(models.Model):
     name = models.CharField(max_length=255, blank=True, null=True)
     curated = models.NullBooleanField()
-    type = models.CharField(max_length=255, blank=True, null=True)
+    list_type = models.CharField(max_length=255, blank=True, null=True)
     # have django update these on modify / add
     created_at = models.DateTimeField(editable=False)
     updated_at = models.DateTimeField()

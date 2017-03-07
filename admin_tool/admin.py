@@ -7,7 +7,7 @@ from admin_tool import models, forms
 class ContentListAdmin(admin.ModelAdmin):
     form = forms.ContentListForm
     list_display = ('name',)
-    exclude = ['curated', 'type']
+    exclude = ['curated', 'list_type']
     filter_horizontal = ('movies',)
 
     readonly_fields = ['updated_at', 'created_at']
