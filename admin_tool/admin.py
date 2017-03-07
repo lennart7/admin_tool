@@ -1,21 +1,14 @@
 from django.contrib import admin
 
-from admin_tool import models
-
-
-class ContentListMovieInline(admin.TabularInline):
-    model = models.ContentListMovie
-    extra = 1
-    readonly_fields = ['movie_title']
-    def movie_title(self, instance):
-        return instance.movie.title
+from admin_tool import models, forms
 
 
 @admin.register(models.ContentList)
 class ContentListAdmin(admin.ModelAdmin):
+    form = forms.ContentListForm
     list_display = ('name',)
     exclude = ['curated', 'type']
-    inlines = [ContentListMovieInline]
+    filter_horizontal = ('movies',)
 
     readonly_fields = ['updated_at', 'created_at']
 
@@ -45,3 +38,8 @@ class ShowAdmin(admin.ModelAdmin):
 #     readonly_fields = ['genre_name']
 #     def genre_name(self, instance):
 #         return instance.genre.genre
+#
+#class ContentListMovieInline(admin.TabularInline):
+#    form = forms.MovieForm
+#    model = models.ContentListMovie
+#    fk_name = 'content_list'

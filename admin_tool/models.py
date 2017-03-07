@@ -5,8 +5,8 @@ from django.db import models
 
 
 class ContentList(models.Model):
-    curated = models.NullBooleanField()
     name = models.CharField(max_length=255, blank=True, null=True)
+    curated = models.NullBooleanField()
     type = models.CharField(max_length=255, blank=True, null=True)
     # have django update these on modify / add
     created_at = models.DateTimeField(editable=False)
@@ -15,6 +15,9 @@ class ContentList(models.Model):
     movies = models.ManyToManyField('Movie', related_name='content_lists', through='ContentListMovie')
     shows = models.ManyToManyField('Show', related_name='content_lists', through='ContentListShow')
     episodes= models.ManyToManyField('Episode', related_name='content_lists', through='ContentListEpisode')
+
+    def __str__(self):
+       return 'Content List: ' + self.name
 
     def save(self, *args, **kwargs):
         """On save, update timestamps."""
@@ -36,6 +39,7 @@ class ContentListEpisode(models.Model):
 
     class Meta:
         managed = False
+        auto_created=True
         db_table = 'content_lists_episodes'
 
 
@@ -45,6 +49,7 @@ class ContentListMovie(models.Model):
 
     class Meta:
         managed = False
+        auto_created=True
         db_table = 'content_lists_movies'
 
 
@@ -54,6 +59,7 @@ class ContentListShow(models.Model):
 
     class Meta:
         managed = False
+        auto_created=True
         db_table = 'content_lists_shows'
 
 
@@ -67,6 +73,36 @@ class Episode(models.Model):
     class Meta:
         managed = False
         db_table = 'episodes'
+
+    def __str__(self):
+        return '%s, Episode %s: %s' % (self.show.title, self.episode_number, self.title)
+
+
+class Movie(models.Model):
+    title = models.CharField(max_length=255, blank=True, null=True)
+    in_theaters = models.NullBooleanField()
+    media_content = models.ForeignKey('MediaContents', models.DO_NOTHING, blank=True, null=True)
+
+    class Meta:
+        managed = False
+        db_table = 'movies'
+
+    def __str__(self):
+        return 'Movie: ' + self.title
+
+
+class Show(models.Model):
+    title = models.CharField(max_length=255, blank=True, null=True)
+    air_day_of_week = models.CharField(max_length=255, blank=True, null=True)
+    air_time = models.CharField(max_length=255, blank=True, null=True)
+    media_content = models.ForeignKey('MediaContents', models.DO_NOTHING, blank=True, null=True)
+
+    class Meta:
+        managed = False
+        db_table = 'shows'
+
+    def __str__(self):
+        return 'Show: ' + self.title
 
 
 class MediaContents(models.Model):
@@ -87,26 +123,8 @@ class MediaContents(models.Model):
         managed = False
         db_table = 'media_contents'
 
-
-class Movie(models.Model):
-    title = models.CharField(max_length=255, blank=True, null=True)
-    in_theaters = models.NullBooleanField()
-    media_content = models.ForeignKey(MediaContents, models.DO_NOTHING, blank=True, null=True)
-
-    class Meta:
-        managed = False
-        db_table = 'movies'
-
-
-class Show(models.Model):
-    title = models.CharField(max_length=255, blank=True, null=True)
-    air_day_of_week = models.CharField(max_length=255, blank=True, null=True)
-    air_time = models.CharField(max_length=255, blank=True, null=True)
-    media_content = models.ForeignKey(MediaContents, models.DO_NOTHING, blank=True, null=True)
-
-    class Meta:
-        managed = False
-        db_table = 'shows'
+    def __str__(self):
+        return 'MediaContents: ' + self.original_title
 
 
 class User(models.Model):
