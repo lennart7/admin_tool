@@ -16,9 +16,6 @@ Including another URLconf
 from django.conf.urls import url
 from django.contrib import admin
 
-from admin_tool.models import Movie
-from admin_tool.queries import MovieAutocomplete
-
 admin.autodiscover()
 
 

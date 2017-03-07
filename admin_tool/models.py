@@ -17,7 +17,7 @@ class ContentList(models.Model):
     episodes= models.ManyToManyField('Episode', related_name='content_lists', through='ContentListEpisode')
 
     def __str__(self):
-       return 'Content List: ' + self.name
+       return 'Content List: %s' % self.name
 
     def save(self, *args, **kwargs):
         """On save, update timestamps."""
@@ -88,7 +88,7 @@ class Movie(models.Model):
         db_table = 'movies'
 
     def __str__(self):
-        return 'Movie: ' + self.title
+        return 'Movie: %s' % self.title
 
 
 class Show(models.Model):
@@ -102,7 +102,7 @@ class Show(models.Model):
         db_table = 'shows'
 
     def __str__(self):
-        return 'Show: ' + self.title
+        return 'Show: %s' % self.title
 
 
 class MediaContents(models.Model):
@@ -124,7 +124,7 @@ class MediaContents(models.Model):
         db_table = 'media_contents'
 
     def __str__(self):
-        return 'MediaContents: ' + self.original_title
+        return 'MediaContents: %s' % self.original_title
 
 
 class User(models.Model):

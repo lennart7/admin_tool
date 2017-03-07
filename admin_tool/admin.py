@@ -16,16 +16,19 @@ class ContentListAdmin(admin.ModelAdmin):
 @admin.register(models.Episode)
 class EpisodeAdmin(admin.ModelAdmin):
     list_display = ('title',)
+    readonly_fields = ['media_content', 'show', 'episode_number', 'season_number']
 
 
 @admin.register(models.Movie)
 class MoviesAdmin(admin.ModelAdmin):
     list_display = ('title',)
+    readonly_fields = ['media_content']
 
 
 @admin.register(models.Show)
 class ShowAdmin(admin.ModelAdmin):
     list_display = ('title',)
+    readonly_fields = ['media_content']
 #
 #
 # class GenresMoviesInline(admin.TabularInline):
