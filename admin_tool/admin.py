@@ -3,14 +3,27 @@ from django.contrib import admin
 from admin_tool import models, forms
 
 
-@admin.register(models.ContentList)
-class ContentListAdmin(admin.ModelAdmin):
-    form = forms.ContentListForm
-    list_display = ('name',)
-    exclude = ['curated', 'list_type']
-    filter_horizontal = ('movies',)
+@admin.register(models.Collection)
+class CollectionAdmin(admin.ModelAdmin):
+    form = forms.CollectionForm
+    list_display = ['display_name', 'internal_name', 'created_by', 'published', 'updated_at']
+    # list_filter = ['created_by', 'published']
+    search_fields = ['display_name', 'internal_name', 'created_by']
+    readonly_fields = ['created_by', 'updated_at', 'created_at']
 
-    readonly_fields = ['updated_at', 'created_at']
+    def get_fieldsets(self, request, obj=None):
+        """Don't show readonly fields on create"""
+        fieldsets = super(CollectionAdmin, self).get_fieldsets(request, obj)
+        if not obj:
+            fields = fieldsets[0][1]['fields']
+            fields = filter(lambda x: x not in self.readonly_fields, fields)
+            fieldsets[0][1]['fields'] = fields
+        return fieldsets
+
+    def get_form(self, request, *args, **kwargs):
+        form = super().get_form(request, *args, **kwargs)
+        form.current_user = request.user
+        return form
 
 
 @admin.register(models.Episode)
@@ -29,20 +42,3 @@ class MoviesAdmin(admin.ModelAdmin):
 class ShowAdmin(admin.ModelAdmin):
     list_display = ('title',)
     readonly_fields = ['media_content']
-#
-#
-# class GenresMoviesInline(admin.TabularInline):
-#     # TODO: this should not be necessary, we should just
-#     # be able to specify the join table in the models def,
-#     # without using "through" since Genre-Movies doesn't have any
-#     # extra carried attributes
-#     model = models.GenresMovies
-#     extra = 1
-#     readonly_fields = ['genre_name']
-#     def genre_name(self, instance):
-#         return instance.genre.genre
-#
-#class ContentListMovieInline(admin.TabularInline):
-#    form = forms.MovieForm
-#    model = models.ContentListMovie
-#    fk_name = 'content_list'

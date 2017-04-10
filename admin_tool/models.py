@@ -1,69 +1,112 @@
 from __future__ import unicode_literals
-from django.utils import timezone
 
+from django.utils import timezone
 from django.db import models
 
+from sortedm2m.fields import SortedManyToManyField
 
-class ContentList(models.Model):
-    name = models.CharField(max_length=255, blank=True, null=True)
-    curated = models.NullBooleanField()
-    list_type = models.CharField(max_length=255, blank=True, null=True)
+
+class BaseModel(models.Model):
+
+    class Meta:
+        abstract = True
+
+    def save(self, *args, **kwargs):
+        """On save, update timestamps."""
+        if not self.id and hasattr(self, 'created_at'):
+            self.created_at = timezone.now()
+        if hasattr(self, 'updated_at'):
+            self.updated_at = timezone.now()
+        return super().save(*args, **kwargs)
+
+
+class Collection(BaseModel):
+    display_name = models.CharField(max_length=255, blank=True, null=True,
+                                    help_text="Public name for the collection")
+    internal_name = models.CharField(max_length=255, blank=True, null=True,
+                                     help_text="Internal name for the collection")
+    created_by = models.CharField(max_length=255, blank=True, null=True)
+    published = models.BooleanField(help_text="Whether or not this collection is currently active.")
     # have django update these on modify / add
     created_at = models.DateTimeField(editable=False)
     updated_at = models.DateTimeField()
 
-    movies = models.ManyToManyField('Movie', related_name='content_lists', through='ContentListMovie')
-    shows = models.ManyToManyField('Show', related_name='content_lists', through='ContentListShow')
-    episodes= models.ManyToManyField('Episode', related_name='content_lists', through='ContentListEpisode')
+    movies = SortedManyToManyField('Movie', sort_value_field_name='order', blank=True,
+                                   through='CollectionMovie', related_name='collections')
+    shows = SortedManyToManyField('Show', sort_value_field_name='order', related_name='collections',
+                                   through='CollectionShow', blank=True)
+    episodes = SortedManyToManyField('Episode', sort_value_field_name='order', related_name='collections',
+                                     through='CollectionEpisode', blank=True)
+    collections = SortedManyToManyField('Collection', sort_value_field_name='order', related_name='parents',
+                                        through='CollectionChildren', blank=True)
 
     def __str__(self):
-       return 'Content List: %s' % self.name
-
-    def save(self, *args, **kwargs):
-        """On save, update timestamps."""
-        if not self.id:
-            self.created_at = timezone.now()
-        self.modified = timezone.now()
-        return super(ContentList, self).save(*args, **kwargs)
+        return 'Collection: %s created_by: %s' % (self.display_name, self.created_by)
 
     class Meta:
-        verbose_name = 'Content List'
-        verbose_name_plural = 'Content Lists'
+        verbose_name = 'Collection'
+        verbose_name_plural = 'Collections'
         managed = False
-        db_table = 'content_lists'
+        db_table = 'collections'
 
 
-class ContentListEpisode(models.Model):
-    content_list = models.ForeignKey(ContentList, primary_key=True)
+class CollectionMovie(BaseModel):
+    movie = models.ForeignKey("Movie", primary_key=True)
+    collection = models.ForeignKey(Collection, primary_key=True)
+    order = models.IntegerField()
+
+    # for sortedm2m plugin
+    _sort_field_name = 'order'
+
+    class Meta:
+        managed = False
+        auto_created = True
+        db_table = 'collections_movies'
+
+
+class CollectionChildren(BaseModel):
+    collection = models.ForeignKey(Collection, primary_key=True)
+    child = models.ForeignKey(Collection, primary_key=True)
+    order = models.IntegerField()
+
+    # for sortedm2m plugin
+    _sort_field_name = 'order'
+
+    class Meta:
+        managed = False
+        auto_created = True
+        db_table = 'collections_self_join'
+
+
+class CollectionEpisode(BaseModel):
+    collection = models.ForeignKey(Collection, primary_key=True)
     episode = models.ForeignKey('Episode', primary_key=True)
+    order = models.IntegerField()
+
+    # for sortedm2m plugin
+    _sort_field_name = 'order'
 
     class Meta:
         managed = False
-        auto_created=True
-        db_table = 'content_lists_episodes'
+        auto_created = True
+        db_table = 'collections_episodes'
 
 
-class ContentListMovie(models.Model):
-    content_list = models.ForeignKey(ContentList, primary_key=True)
-    movie = models.ForeignKey('Movie', primary_key=True)
-
-    class Meta:
-        managed = False
-        auto_created=True
-        db_table = 'content_lists_movies'
-
-
-class ContentListShow(models.Model):
-    content_list = models.ForeignKey(ContentList, primary_key=True)
+class CollectionShow(BaseModel):
+    collection = models.ForeignKey(Collection, primary_key=True)
     show = models.ForeignKey('Show', primary_key=True)
+    order = models.IntegerField()
+
+    # for sortedm2m plugin
+    _sort_field_name = 'order'
 
     class Meta:
         managed = False
-        auto_created=True
-        db_table = 'content_lists_shows'
+        auto_created = True
+        db_table = 'collections_shows'
 
 
-class Episode(models.Model):
+class Episode(BaseModel):
     title = models.CharField(max_length=255, blank=True, null=True)
     season_number = models.IntegerField(blank=True, null=True)
     episode_number = models.IntegerField(blank=True, null=True)
@@ -78,7 +121,7 @@ class Episode(models.Model):
         return '%s, Episode %s: %s' % (self.show.title, self.episode_number, self.title)
 
 
-class Movie(models.Model):
+class Movie(BaseModel):
     title = models.CharField(max_length=255, blank=True, null=True)
     in_theaters = models.NullBooleanField()
     media_content = models.ForeignKey('MediaContents', models.DO_NOTHING, blank=True, null=True)
@@ -91,7 +134,7 @@ class Movie(models.Model):
         return 'Movie: %s' % self.title
 
 
-class Show(models.Model):
+class Show(BaseModel):
     title = models.CharField(max_length=255, blank=True, null=True)
     air_day_of_week = models.CharField(max_length=255, blank=True, null=True)
     air_time = models.CharField(max_length=255, blank=True, null=True)
@@ -105,7 +148,7 @@ class Show(models.Model):
         return 'Show: %s' % self.title
 
 
-class MediaContents(models.Model):
+class MediaContents(BaseModel):
     original_title = models.CharField(max_length=255, blank=True, null=True)
     alternative_titles = models.TextField(blank=True, null=True)  # This field type is a guess.
     overview = models.CharField(max_length=255, blank=True, null=True)
@@ -127,7 +170,7 @@ class MediaContents(models.Model):
         return 'MediaContents: %s' % self.original_title
 
 
-class User(models.Model):
+class User(BaseModel):
     email = models.CharField(max_length=255, blank=True, null=True)
     name = models.CharField(max_length=255, blank=True, null=True)
     phone_number = models.CharField(max_length=255, blank=True, null=True)

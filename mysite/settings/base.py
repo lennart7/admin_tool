@@ -37,8 +37,8 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    # autocomplete light package
     'admin_tool',
+    'sortedm2m',
 ]
 
 MIDDLEWARE = [
