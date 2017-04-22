@@ -27,14 +27,13 @@ class Collection(BaseModel):
                                      help_text="Internal name for the collection")
     created_by = models.CharField(max_length=255, blank=True, null=True)
     published = models.BooleanField(help_text="Whether or not this collection is currently active.")
-    # have django update these on modify / add
     created_at = models.DateTimeField(editable=False)
     updated_at = models.DateTimeField()
 
     movies = SortedManyToManyField('Movie', sort_value_field_name='order', blank=True,
                                    through='CollectionMovie', related_name='collections')
     shows = SortedManyToManyField('Show', sort_value_field_name='order', related_name='collections',
-                                   through='CollectionShow', blank=True)
+                                  through='CollectionShow', blank=True)
     episodes = SortedManyToManyField('Episode', sort_value_field_name='order', related_name='collections',
                                      through='CollectionEpisode', blank=True)
     collections = SortedManyToManyField('Collection', sort_value_field_name='order', related_name='parents',
@@ -61,7 +60,7 @@ class CollectionMovie(BaseModel):
     class Meta:
         managed = False
         auto_created = True
-        db_table = 'collections_movies'
+        db_table = 'collection_movies'
 
 
 class CollectionChildren(BaseModel):
@@ -75,7 +74,7 @@ class CollectionChildren(BaseModel):
     class Meta:
         managed = False
         auto_created = True
-        db_table = 'collections_self_join'
+        db_table = 'collection_self_joins'
 
 
 class CollectionEpisode(BaseModel):
@@ -89,7 +88,7 @@ class CollectionEpisode(BaseModel):
     class Meta:
         managed = False
         auto_created = True
-        db_table = 'collections_episodes'
+        db_table = 'collection_episodes'
 
 
 class CollectionShow(BaseModel):
@@ -103,7 +102,95 @@ class CollectionShow(BaseModel):
     class Meta:
         managed = False
         auto_created = True
-        db_table = 'collections_shows'
+        db_table = 'collection_shows'
+
+
+class ContentTag(BaseModel):
+    tag = models.CharField(max_length=255, blank=True, null=True,
+                           help_text="Public name for the collection")
+    # tag_type = models.CharField(max_length=255, blank=True, null=True)
+    movies = SortedManyToManyField('Movie', sorted=False, blank=True, through='ContentTagMovie')
+    episodes = SortedManyToManyField('Episode', sorted=False, blank=True, through='ContentTagEpisode')
+    shows = SortedManyToManyField('Show', sorted=False, blank=True, through='ContentTagShow')
+    collections = SortedManyToManyField('Collection', sorted=False, blank=True, through='ContentTagCollection')
+    created_at = models.DateTimeField()
+    updated_at = models.DateTimeField()
+
+    def __str__(self):
+        return 'Tag: %s' % self.tag
+
+    class Meta:
+        verbose_name = 'Content Tag'
+        verbose_name_plural = 'Content Tags'
+        managed = False
+        db_table = 'content_tags'
+
+
+class ContentTagMovie(BaseModel):
+    movie = models.ForeignKey("Movie", primary_key=True)
+    content_tag = models.ForeignKey(ContentTag, primary_key=True)
+
+    class Meta:
+        managed = False
+        auto_created = True
+        db_table = 'content_tag_movies'
+
+
+class ContentTagEpisode(BaseModel):
+    episode = models.ForeignKey("Episode", primary_key=True)
+    content_tag = models.ForeignKey(ContentTag, primary_key=True)
+
+    class Meta:
+        managed = False
+        auto_created = True
+        db_table = 'content_tag_episodes'
+
+
+class ContentTagShow(BaseModel):
+    show = models.ForeignKey("Show", primary_key=True)
+    content_tag = models.ForeignKey(ContentTag, primary_key=True)
+
+    class Meta:
+        managed = False
+        auto_created = True
+        db_table = 'content_tag_shows'
+
+
+class ContentTagCollection(BaseModel):
+    collection = models.ForeignKey("Collection", primary_key=True)
+    content_tag = models.ForeignKey(ContentTag, primary_key=True)
+
+    class Meta:
+        managed = False
+        auto_created = True
+        db_table = 'content_tag_collections'
+
+
+class UserTag(BaseModel):
+    tag = models.CharField(max_length=255, blank=True, null=True,
+                           help_text="tag name")
+    users = SortedManyToManyField('User', sorted=False, blank=True, through='UserTagUsers')
+    created_at = models.DateTimeField()
+    updated_at = models.DateTimeField()
+
+    def __str__(self):
+        return 'Tag: %s' % self.tag
+
+    class Meta:
+        verbose_name = 'User Tag'
+        verbose_name_plural = 'User Tags'
+        managed = False
+        db_table = 'user_tags'
+
+
+class UserTagUsers(BaseModel):
+    user = models.ForeignKey("User", primary_key=True)
+    user_tag = models.ForeignKey(UserTag, primary_key=True)
+
+    class Meta:
+        managed = False
+        auto_created = True
+        db_table = 'user_tag_users'
 
 
 class Episode(BaseModel):
@@ -180,3 +267,6 @@ class User(BaseModel):
     class Meta:
         managed = False
         db_table = 'users'
+
+    def __str__(self):
+        return 'User: %s' % self.name

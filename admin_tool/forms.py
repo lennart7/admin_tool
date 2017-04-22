@@ -2,7 +2,7 @@ from django import forms
 
 from admin_tool import models
 
-from django.contrib.admin.widgets import FilteredSelectMultiple
+from sortedm2m.forms import SortedMultipleChoiceField
 
 
 class BaseForm(forms.ModelForm):
@@ -13,6 +13,34 @@ class BaseForm(forms.ModelForm):
         for bound_field in self:
             if hasattr(bound_field, "field") and bound_field.field.required:
                 bound_field.field.widget.attrs["required"] = "required"
+
+
+class ContentTagForm(BaseForm):
+    tag = forms.CharField(required=True)
+    movies = SortedMultipleChoiceField(
+        queryset=models.Movie.objects.all(),
+        required=False,
+    )
+    shows = SortedMultipleChoiceField(
+        queryset=models.Show.objects.all(),
+        required=False,
+    )
+    episodes = SortedMultipleChoiceField(
+        queryset=models.Episode.objects.all(),
+        required=False,
+    )
+    collections = SortedMultipleChoiceField(
+        queryset=models.Collection.objects.all(),
+        required=False,
+    )
+
+
+class UserTagForm(BaseForm):
+    tag = forms.CharField(required=True)
+    users = SortedMultipleChoiceField(
+        queryset=models.User.objects.all(),
+        required=False,
+    )
 
 
 class CollectionForm(BaseForm):
@@ -37,8 +65,8 @@ class CollectionForm(BaseForm):
         content types, as it is unclear how to implement this via django forms.
         Collections also can't contain themselves."""
         super().clean(*args, **kwds)
-        if sum([len(self.cleaned_data[attr]) > 1 for attr in \
-               ['movies', 'shows', 'episodes', 'collections']]) > 1:
+        if sum([(len(self.cleaned_data[attr]) > 0) for attr in
+                ['movies', 'shows', 'episodes', 'collections']]) > 1:
             raise forms.ValidationError("""Mixed content types are currently not supported. \
     The collection may only have one of the following different types: 'movies', 'shows', 'episodes', 'collections'.""")
         if self.instance in self.cleaned_data['collections']:
@@ -64,4 +92,3 @@ class CollectionForm(BaseForm):
             self.save_m2m()
 
         return collection
-
