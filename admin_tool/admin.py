@@ -70,7 +70,29 @@ class ShowAdmin(admin.ModelAdmin):
     readonly_fields = ['media_content']
 
 
+class WatchedAtInline(admin.StackedInline):
+    model = models.WatchedAt
+    readonly_fields = ['created_at', 'content']
+    fields = ['created_at', 'content']
+    # don't show extra records
+    extra = 0
+
+    def has_add_permission(self, request):
+        return False
+
+    def content(self, obj):
+        """Custom inline which displays the title and content type of the
+        watched content"""
+        types = {'Episode': models.Episode, 'Movie': models.Movie}
+        if not obj.id:
+            return ''
+        target = types[obj.watchable_type]
+        res = target.objects.get(pk=obj.watchable_id)
+        return '{}: {}'.format(obj.watchable_type, res.title)
+
+
 @admin.register(models.User)
 class UserAdmin(admin.ModelAdmin):
     list_display = ('email', 'name', 'phone_number')
-    readonly_fields = ['email', 'name', 'phone_number']
+    readonly_fields = ['created_at', 'updated_at']
+    inlines = [WatchedAtInline]

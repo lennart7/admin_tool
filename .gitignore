@@ -84,3 +84,5 @@ celerybeat-schedule
 .venv
 venv/
 ENV/
+
+cache
